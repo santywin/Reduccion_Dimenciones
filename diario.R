@@ -151,3 +151,4 @@ str(cov_ca)
 
 
 cov_ca$col$contrib
+
