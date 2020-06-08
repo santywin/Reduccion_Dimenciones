@@ -74,3 +74,4 @@ vene_mca <- MCA(vene, ind.sup = 53:55,
 fviz_mca_biplot(vene_mca, repel = TRUE)
 fviz_mca_var(vene_mca, choice = "mca.cor",
              repel = TRUE)
+

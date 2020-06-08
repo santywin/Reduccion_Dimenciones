@@ -74,3 +74,4 @@ fviz_mfa_ind(vino_mfa, col.ind = "cos2",
 fviz_mfa_ind(vino_mfa, partial = c("1DAM", "1VAU", "2ING")) 
 
 fviz_mfa_axes(vino_mfa)
+

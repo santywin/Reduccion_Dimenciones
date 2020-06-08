@@ -17,3 +17,4 @@ tibble(sco=dist_rob@sd, ort=dist_rob@od) %>%
   ggplot(aes(sco, ort)) + geom_point() +
   geom_hline(yintercept = dist_rob@cutoff.od) +
   geom_vline(xintercept = dist_rob@cutoff.sd)
+
