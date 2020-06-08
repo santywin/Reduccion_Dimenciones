@@ -73,32 +73,32 @@ print(as_tibble(article))
 stop <- tibble::enframe(stopwords("spanish"), value="word", name = NULL) %>% 
   bind_rows(tibble(word=c("mas", "si")))
 
-elcom <- tibble::enframe(readtext("arti/elcomercio.docx")$text, value="el.com", name = NULL) %>% 
+elcom <- tibble::enframe(readtext("git/Reduccion de dimenciones/Reduccion_Dimenciones/arti/elcomercio.docx")$text, value="el.com", name = NULL) %>% 
   unnest_tokens(word, el.com) %>% 
   anti_join(stop, by="word") %>% 
   count(word) %>% filter(!str_detect(word, "[:digit:]+")) %>% rename(el.com=n)
 
-eluni <- tibble::enframe(readtext("arti/eluniverso.docx")$text, value="el.uni", name = NULL) %>% 
+eluni <- tibble::enframe(readtext("git/Reduccion de dimenciones/Reduccion_Dimenciones/arti/eluniverso.docx")$text, value="el.uni", name = NULL) %>% 
   unnest_tokens(word, el.uni) %>% 
   anti_join(stop, by="word") %>% 
   count(word) %>% filter(!str_detect(word, "[:digit:]+")) %>% rename(el.uni=n)
 
-bbc <- tibble::enframe(readtext("arti/bbcnews.docx")$text, value="bbc", name = NULL) %>% 
+bbc <- tibble::enframe(readtext("git/Reduccion de dimenciones/Reduccion_Dimenciones/arti/bbcnews.docx")$text, value="bbc", name = NULL) %>% 
   unnest_tokens(word, bbc) %>% 
   anti_join(stop, by="word") %>% 
   count(word) %>% filter(!str_detect(word, "[:digit:]+")) %>% rename(bbc=n)
 
-fran24 <- tibble::enframe(readtext("arti/france24.docx")$text, value="fran.24", name = NULL) %>% 
+fran24 <- tibble::enframe(readtext("git/Reduccion de dimenciones/Reduccion_Dimenciones/arti/france24.docx")$text, value="fran.24", name = NULL) %>% 
   unnest_tokens(word, fran.24) %>% 
   anti_join(stop, by="word") %>% 
   count(word) %>% filter(!str_detect(word, "[:digit:]+")) %>% rename(fran.24=n)
 
-infobae <- tibble::enframe(readtext("arti/infobae.docx")$text, value="inf.bae", name = NULL) %>% 
+infobae <- tibble::enframe(readtext("git/Reduccion de dimenciones/Reduccion_Dimenciones/arti/infobae.docx")$text, value="inf.bae", name = NULL) %>% 
   unnest_tokens(word, inf.bae) %>% 
   anti_join(stop, by="word") %>% 
   count(word) %>% filter(!str_detect(word, "[:digit:]+")) %>% rename(info.bae=n)
 
-nyt <- tibble::enframe(readtext("arti/newyorktimes.docx")$text, value="nyt", name = NULL) %>% 
+nyt <- tibble::enframe(readtext("git/Reduccion de dimenciones/Reduccion_Dimenciones/arti/newyorktimes.docx")$text, value="nyt", name = NULL) %>% 
   unnest_tokens(word, nyt) %>% 
   anti_join(stop, by="word") %>% 
   count(word) %>% filter(!str_detect(word, "[:digit:]+")) %>% rename(nyt=n)
@@ -133,7 +133,7 @@ covid <- eluni %>%
   group_by(word, key) %>% summarise(value=sum(value)) %>% 
   spread(key, value, fill=0) 
 
-readr::write_excel_csv2(covid, "data/covid.csv")
+readr::write_excel_csv2(covid, "git/Reduccion de dimenciones/Reduccion_Dimenciones/data/covid.csv")
 
 cov_mat <- as.matrix(covid[,-1])
 rownames(cov_mat) <- as.matrix(covid[,1])
