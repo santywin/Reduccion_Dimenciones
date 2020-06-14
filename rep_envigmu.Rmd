@@ -1,0 +1,156 @@
+---
+title: "Análisis de ENVIGMU: 2019"
+author: "Antonio Alvarez"
+date: "14.6.2020"
+output: pdf_document
+---
+
+```{r setup, include=TRUE, warning=FALSE, message=FALSE, echo=-1}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, out.width="60%", fig.align = "center")
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(readr)
+library(readxl)
+library(tibble)
+library(stringr)
+library(FactoMineR)
+library(factoextra)
+library(patchwork)
+
+```
+
+## 1. Introducción
+
+La violencia de genero es un problema perverso que afecta a todos los miembros de la sociedad. Este se refiere a actos cometidos exclusivamente contra mujeres o niñas, los cuales son causados por diversos culturales y socioeconomicos. Para recoger información de estas posturas, el Instituto Nacional de Estadísticas y Censos (INEC) recogieron opiniones a nivel nacional a través de la Encuesta Nacional sobre Relaciones Familiares y Violencia de Genero contra las Mujeres (ENVIGMU) en el 2019.
+
+La metodología, sus datos,  y demás metainformacion la podemos encontrar en su [pagina oficial](https://www.ecuadorencifras.gob.ec/violencia-de-genero/). Debido a que las mujeres pueden experimentar actos violentos de diversas formas y en diferentes escenarios, se pueden identificar grupos de variables que siguen estas membresias. En nuestro análisis, nos enfocaremos en los escenarios en donde se da esta violencia: escolar, familiar, social, laboral y en pareja. 
+
+Para investigar la estructura de las información a través de estos grupos, usaremos una metodología ya discutida en clases: análisis factorial múltiple (MFA). Ademas de descomponer toda mi observación en factores principales, la información de cada grupo se la resumirá y sus diferencias en este plano se las dividirá. Es crucial notar la presencia de pesos en el análisis de encuesta y su inclusión en los métodos para el análisis tienen que ser de principal consideración para el investigador
+
+\newpage
+
+## 2. Configuración del modelo
+
+```{r}
+vio_df <- read_delim("data/violencia.csv", ";")[-1]
+
+# Transformacion de pesos en numericos
+pesos <- vio_df[,72] %>% 
+  mutate(pesos=as.numeric(str_replace(pesos, ",", "."))) %>% 
+  pull(pesos)
+
+vio_mfa <- MFA(vio_df[-72], group = c(15, 18, 14, 22, 1, 1), 
+               type = c(rep("n", 4), "s", "n"),
+               name.group = c("educacion", "laboral", 
+                              "familiar", "social", "edad", "civil"),
+               num.group.sup = c(5, 6), graph = FALSE, row.w = pesos)
+```
+
+## 3. Resultados
+
+### 3.1 Autovalores
+
+```{r}
+
+get_eig(vio_mfa)[1:10,]
+
+```
+
+```{r, out.width="60%"}
+
+fviz_screeplot(vio_mfa) + labs(x="Dimensiones", y="Porcentaje de varianza explicada")
+
+```
+
+Los 10 primeros autovalores no corresponden ni al 50% de la varianza acumulada, lo cual indica una alta dimensionalidad en la estructura de los datos. Esto no es inesperado, es común en análisis de variables categóricas donde las variables están muy dispersas. En el curso, tuvimos un ejemplo durante la explicación MCA donde los componentes igual no capturaban mucha varianza.
+
+### 3.2 Nube de individuos y preguntas
+
+```{r}
+
+fviz_mfa_ind(vio_mfa, geom = "point", alpha.ind = 0.1) +
+  labs(title = "Individuos - MFA")
+
+```
+
+En la dirección de la primera dimensión, se ve una importante desviación de individuos. Mientras los puntos mas se alejan del origen, se dirigen a diferentes partes del espacio dimensional. 
+
+
+```{r}
+
+fviz_mfa_var(vio_mfa, geom = c("point", "text"), 
+             choice = "quali.var", labelsize=3) +
+  labs(title = "Preguntas - MFA")
+
+```
+
+Como los individuos, las variables también siguen una dispersión importante en la dirección del primer componente. Podemos distinguir 3 direcciones importantes desde esta representación. Una diagonal superior con categorías como `s4a_1_i_Si` y `s4a_1_n_Si`, una dirección paralela al primer componente, y a otra diagonal inferior con categorías como `s2a_3_m_Si` y `s2a_3_k_Si`. 
+
+En este gráfico no se aprecia adecuadamente, pero las categorías con el valor `No` se encuentran muy cercanas unas o otra en el origen, mientras las que se responde `Si` están alejadas en el primer componente. Recomiendo que recreen este gráfico agregando el parámetro `repel = TRUE` al código y verificar esta forma. 
+
+```{r}
+
+fviz_mfa_var(vio_mfa, "group") +
+  labs(title="Grupos de preguntas - MFA")
+
+```
+
+Cuando vemos las grupos, dentro de las componentes de mayor varianza, los grupos suplementarios (edad y estado civil) no están correlacionados con ellos y no pueden ser interpretados utilizando estos componentes. En contraste, los otros grupos se encuentran correlacionados por lo menos con un componente. En particular, podemos ver tambien que el grupo de variables correspondientes al grupo laboral están muy cerca a las del ámbito social, lo cual significa que ambos grupos son bien parecidos y esperaríamos que sus categorías sean similares.  
+
+\newpage
+
+### 3.3 El 1er y el 2do componente
+
+
+```{r}
+p1 <- fviz_contrib(vio_mfa, "group", axes = 1) +
+  labs(title="Contrib. de los grupos a la 1era Dim", y="Contribución (%)")
+
+p2 <- fviz_contrib(vio_mfa, "group", axes = 2) +
+  labs(title="Contrib. de los grupos a la 2da Dim", y="Contribución (%)")
+
+p1 + p2
+```
+
+Las categorías de los 4 ámbitos son importantes para la construcción del primer componente, mientras que el 2do se alimenta mas del ámbito familiar y educativo.
+
+
+```{r}
+
+fviz_mfa_var(vio_mfa, "quali.var", col.var = "contrib", 
+             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"), 
+             col.var.sup = "violet",
+             geom = c("point", "text"), labelsize=3) +
+  labs(title="Contribución Preguntas - MFA")
+
+
+```
+
+Vemos una alta contribución para la categoría `Si` de las preguntas `s4a_1_i`, `s4a_1_n`, `s4a_1_l` y `s4a_1_m`. Usando las información de la base de etiquetas (`etiquetas.xlsx`),
+encontramos que estas preguntas se refieren al forzoso uso de la fuerza para tener relaciones sexuales. Con eso, podríamos decir que esta dirección se refiere mujeres que han sido violadas en un ambiente social. 
+
+Debido tambien a que su contribución es alta para los 2 primeros componentes, podríamos decir que estas 2 dimensiones dividen a las mujeres que han sufrido un nivel mínimo de violencia con otras que han sido victimas de niveles mas altos de violencia.
+
+
+```{r}
+
+fviz_mfa_var(vio_mfa, "quali.var",col.var = "cos2", 
+             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"), 
+             col.var.sup = "violet", alpha=0.2,
+             geom = c("point", "text"), labelsize=3) +
+  labs(title="Coseno Preguntas - MFA")
+
+
+```
+
+La calidad de la representación tambien nos ayuda a informarnos de la lectura que hicimos de los componentes anteriormente. Para encontrar la dirección de otras categorías seria adecuado estudiar la estructura de estas nubes en otros componentes.
+
+
+## 4 Limitaciones
+
+Una limitación importante es la baja cantidad de varianza que estamos explicando en los primeros componentes. A pesar que estos 2 son los de máxima varianza, esperaríamos que otros componentes tambien nos informen de mas información sobre la estructura de la respuestas. 
+
+## 5 Siguientes pasos
+
+El análisis presentado no es para nada un análisis completo de los resultados de esta encuesta. Mas preguntas podríamos hacer sobre las similitudes de los grupos. Que preguntas en particular son las que los ámbitos suelen tener una distribución en común? En cuanto a los individuos, podríamos seguir investigando su nube y analizar candidatos en diferentes direcciones para informarnos de los componentes y la estructura general de los datos. Seria adecuado, también, agregar la información del quinto ámbito sobre la violencia en Pareja y observar cual es el grupo que mas se acerca o si los primeros componentes que hemos creado también están correlacionados con este nuevo ámbito.  
